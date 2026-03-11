@@ -3,11 +3,11 @@ terraform {
     k3d = {
       source  = "SneakyBugs/k3d"
       version = "1.0.1"
-    },
+    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "3.0.1"
-    },
+    }
     helm = {
       source  = "hashicorp/helm"
       version = "3.1.1"

@@ -1,0 +1,5 @@
+terraform-helm/.terraform/
+
+terraform-helm/.terraform.lock.hcl
+
+
