@@ -1,0 +1,34 @@
+labels:
+  app: postgres
+
+statefulset:
+  name: postgres
+  replicas: 1
+
+container:
+  name: postgres
+
+image:
+  repository: postgres
+  tag: "15-alpine"
+  pullPolicy: IfNotPresent
+
+service:
+  name: postgres-svc
+  port: 5432
+
+secret:
+  name: secret-info
+  usernameKey: username
+  passwordKey: password
+
+postgres:
+  additionalDatabases: "mlflow,airflow"
+
+configMap:
+  name: postgres-init-script
+
+persistence:
+  volumeName: postgredb
+  mountPath: /var/lib/postgresql/data
+  existingClaim: pvc-postgres

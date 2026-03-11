@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMap.name }}
+data:
+  init-databases.sh: |
+    #!/bin/bash
+    set -e
+    set -u
+
+    function create_user_and_database() {
+      local database=$1
+      echo "  Creating database '$database'"
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+        CREATE DATABASE $database;
+    EOSQL
+    }
+
+    # Add as many databases as you need here
+    if [ -n "$ADDITIONAL_DATABASES" ]; then
+      for db in $(echo $ADDITIONAL_DATABASES | tr ',' ' '); do
+        create_user_and_database $db
+      done
+    fi
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.statefulset.name }}
+spec:
+  serviceName: {{ .Values.service.name }}
+  replicas: {{ .Values.statefulset.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.labels.app }}
+    spec:
+      containers:
+      - name: {{ .Values.container.name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secret.name }}
+              key: {{ .Values.secret.usernameKey }}
+
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secret.name }}
+              key: {{ .Values.secret.passwordKey }}
+
+        - name: ADDITIONAL_DATABASES
+          value: "{{ .Values.postgres.additionalDatabases }}"
+
+        ports:
+        - containerPort: {{ .Values.service.port }}
+
+        volumeMounts:
+        - name: {{ .Values.persistence.volumeName }}
+          mountPath: {{ .Values.persistence.mountPath }}
+
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d/init-databases.sh
+          subPath: init-databases.sh
+      volumes:
+      - name: {{ .Values.persistence.volumeName }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim }}
+
+      - name: init-scripts
+        configMap:
+          name: {{ .Values.configMap.name }}
+          defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+spec:
+  selector:
+    app: {{ .Values.labels.app }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}

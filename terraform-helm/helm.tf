@@ -1,16 +1,10 @@
 locals {
   charts = {
-    # Online Chart
-    "nginx-ingress" = {
-      is_local = false
-      source   = "https://kubernetes.github.io/ingress-nginx"
-      chart    = "ingress-nginx"
-    },
-    # Local Chart (Stored in ./my-charts/frontend)
+    # Local Chart (Stored in ./charts/frontend)
     "my-app" = {
       is_local = true
-      source   = "./my-charts/frontend" # Path to the folder
-      chart    = "frontend"             # The name of the chart
+      source   = "./charts/postgres" # Path to the folder
+      chart    = "postgres"             # The name of the chart
     }
   }
 }

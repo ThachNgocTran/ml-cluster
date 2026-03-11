@@ -70,3 +70,19 @@ provider "helm" {
     cluster_ca_certificate = base64decode(k3d_cluster.my_cluster.cluster_ca_certificate)
   }
 }
+
+# Secret Information, e.g. PostgreSQL credentials.
+resource "kubernetes_secret" "secret_info" {
+  metadata {
+    name = "secret-info"
+  }
+
+  data = {
+    username = var.username
+    password = var.password
+	airflow_fernet_key= var.airflow_fernet_key
+  }
+
+  # Ensure the cluster is ready before trying to create the secret
+  depends_on = [k3d_cluster.my_cluster]
+}

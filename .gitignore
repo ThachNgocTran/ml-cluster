@@ -2,4 +2,5 @@ terraform-helm/.terraform/
 
 terraform-helm/.terraform.lock.hcl
 
-
+terraform-helm/terraform.tfstate
+terraform-helm/terraform.tfstate.backup
