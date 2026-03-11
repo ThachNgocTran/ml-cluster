@@ -18,17 +18,40 @@ terraform {
 # 1. Create the k3d cluster
 resource "k3d_cluster" "my_cluster" {
   name    = "demo-cluster"
-  servers = 1
-  agents  = 4
+  k3d_config = <<EOF
+apiVersion: k3d.io/v1alpha4
+kind: Simple
 
-  # Expose a port (e.g., 8080) to your local machine
-  port {
-    host_port      = 80
-    container_port = 80
-    node_filters   = ["loadbalancer"]
-  }
+servers: 1
+agents: 4
 
-  wait_for_ready  = true
+volumes:
+  - volume: /home/irobot/projects/ml-cluster/postgres-data:/var/lib/postgres-data
+    nodeFilters:
+      - server:*
+      - agent:*
+  - volume: /home/irobot/projects/ml-cluster/mlflow-data:/var/lib/mlflow-data
+    nodeFilters:
+      - server:*
+      - agent:*
+  - volume: /home/irobot/projects/ml-cluster/airflow/dags-data:/var/lib/airflow-dags-data
+    nodeFilters:
+      - server:*
+      - agent:*
+  - volume: /home/irobot/projects/ml-cluster/airflow/logs-data:/var/lib/airflow-logs-data
+    nodeFilters:
+      - server:*
+      - agent:*
+  - volume: /home/irobot/projects/ml-cluster/ml_app:/var/lib/ml_app
+    nodeFilters:
+      - server:*
+      - agent:*
+
+ports:
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+EOF
 }
 
 # 2. Configure Helm to talk to the cluster we just built
@@ -40,7 +63,7 @@ provider "kubernetes" {
 }
 
 provider "helm" {
-  kubernetes {
+  kubernetes = {
     host                   = k3d_cluster.my_cluster.host
     client_certificate     = base64decode(k3d_cluster.my_cluster.client_certificate)
     client_key             = base64decode(k3d_cluster.my_cluster.client_key)
