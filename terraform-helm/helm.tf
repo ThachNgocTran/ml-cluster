@@ -1,14 +1,18 @@
 locals {
   charts = {
     # Local Chart (Stored in ./charts/frontend)
-    "my-app" = {
+    "postgres" = {
       is_local = true
       source   = "./charts/postgres" # Path to the folder
-      chart    = "postgres"             # The name of the chart
+      chart    = "postgres"          # The name of the chart
+    }
+    "mlflow" = {
+      is_local = true
+      source   = "./charts/mlflow"
+      chart    = "mlflow"
     }
   }
 }
-
 
 resource "helm_release" "apps" {
   for_each = local.charts

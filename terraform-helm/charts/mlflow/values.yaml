@@ -1,0 +1,30 @@
+mlflow:
+  name: mlflow
+  containerName: mlflow
+  appLabel: mlflow
+  image: ghcr.io/mlflow/mlflow:v3.10.1-full
+  port: 5000
+  host: 0.0.0.0
+  artifactPath: /var/lib/mlflow-data
+  allowedHosts: "*"
+  corsOrigins: "*"
+
+security:
+  fsGroup: 0
+  runAsUser: 0
+  runAsGroup: 0
+
+postgres:
+  host: postgres-svc
+  port: 5432
+  database: mlflow
+  secretName: secret-info
+  usernameKey: username
+  passwordKey: password
+
+persistence:
+  existingClaim: pvc-mlflow
+
+service:
+  name: mlflow-svc
+  port: 5000

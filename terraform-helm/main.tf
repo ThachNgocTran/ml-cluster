@@ -17,7 +17,7 @@ terraform {
 
 # 1. Create the k3d cluster
 resource "k3d_cluster" "my_cluster" {
-  name    = "demo-cluster"
+  name       = "demo-cluster"
   k3d_config = <<EOF
 apiVersion: k3d.io/v1alpha4
 kind: Simple
@@ -78,9 +78,9 @@ resource "kubernetes_secret" "secret_info" {
   }
 
   data = {
-    username = var.username
-    password = var.password
-	airflow_fernet_key= var.airflow_fernet_key
+    username           = var.username
+    password           = var.password
+    airflow_fernet_key = var.airflow_fernet_key
   }
 
   # Ensure the cluster is ready before trying to create the secret
