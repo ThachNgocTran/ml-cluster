@@ -19,6 +19,10 @@ terraform {
   }
 }
 
+locals {
+  base_dir = abspath("${path.module}/../")
+}
+
 # 1. Create the k3d cluster
 resource "k3d_cluster" "my_cluster" {
   name       = "demo-cluster"
@@ -30,23 +34,23 @@ servers: 1
 agents: 4
 
 volumes:
-  - volume: /home/irobot/projects/ml-cluster/postgres-data:/var/lib/postgres-data
+  - volume: "${local.base_dir}/postgres-data:/var/lib/postgres-data"
     nodeFilters:
       - server:*
       - agent:*
-  - volume: /home/irobot/projects/ml-cluster/mlflow-data:/var/lib/mlflow-data
+  - volume: "${local.base_dir}/mlflow-data:/var/lib/mlflow-data"
     nodeFilters:
       - server:*
       - agent:*
-  - volume: /home/irobot/projects/ml-cluster/airflow/dags-data:/var/lib/airflow-dags-data
+  - volume: "${local.base_dir}/airflow/dags-data:/var/lib/airflow-dags-data"
     nodeFilters:
       - server:*
       - agent:*
-  - volume: /home/irobot/projects/ml-cluster/airflow/logs-data:/var/lib/airflow-logs-data
+  - volume: "${local.base_dir}/airflow/logs-data:/var/lib/airflow-logs-data"
     nodeFilters:
       - server:*
       - agent:*
-  - volume: /home/irobot/projects/ml-cluster/ml_app:/var/lib/ml_app
+  - volume: "${local.base_dir}/ml_app:/var/lib/ml_app"
     nodeFilters:
       - server:*
       - agent:*
