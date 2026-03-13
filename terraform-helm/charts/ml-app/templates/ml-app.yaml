@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.app.name }}
+  labels:
+    app: {{ .Values.app.name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}
+    spec:
+      containers:
+        - name: {{ .Values.container.name }}
+          image: {{ .Values.container.image }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          command:
+            - bash
+            - -c
+            - |
+              set -e
+              
+              echo "Install scikit-learn"
+              pip install scikit-learn
+              
+              echo "Install mlflow"
+              pip install mlflow==3.10.1
+              
+              echo "Install Flask"
+              pip install Flask
+              
+              echo "Install Unicorn"
+              pip install gunicorn
+
+              echo "Install Numpy"
+              pip install numpy
+              
+              exec gunicorn --bind=0.0.0.0:9696 --pythonpath /var/lib/ml_app ml_app:app
+          volumeMounts:
+            - name: ml-app-data
+              mountPath: {{ .Values.storage.mountPath }}
+      volumes:
+        - name: ml-app-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.storage.pvcName }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ .Values.app.name }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}

@@ -11,6 +11,11 @@ locals {
       source   = "./charts/airflow"
       chart    = "airflow"
     }
+	"ml-app" = {
+      is_local = true
+      source   = "./charts/ml-app"
+      chart    = "ml-app"
+    }
   }
 }
 
@@ -44,5 +49,5 @@ resource "helm_release" "apps" {
   timeout = 900   # 15 minutes
   
   # MyNote: This list must be static! Can't be passed from "each".
-  depends_on = [kubernetes_secret.secret_info, kubernetes_persistent_volume_claim.pvc_mlflow, kubernetes_persistent_volume_claim.pvc_airflow_dags, kubernetes_persistent_volume_claim.pvc_airflow_logs, helm_release.postgres]
+  depends_on = [kubernetes_secret.secret_info, kubernetes_persistent_volume_claim.pvc_mlflow, kubernetes_persistent_volume_claim.pvc_airflow_dags, kubernetes_persistent_volume_claim.pvc_airflow_logs, kubernetes_persistent_volume_claim.pvc_ml_app_data, helm_release.postgres]
 }

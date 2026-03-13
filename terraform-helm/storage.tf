@@ -240,3 +240,63 @@ resource "kubernetes_persistent_volume" "pv_airflow_logs" {
     }
   }
 }
+
+### ML-APP ###
+resource "kubernetes_persistent_volume_claim" "pvc_ml_app_data" {
+  depends_on = [kubernetes_storage_class.local_storage]
+  
+  metadata {
+    name = "pvc-ml-app-data"
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+
+    storage_class_name = "local-storage"
+
+    resources {
+      requests = {
+        storage = "5Gi"
+      }
+    }
+
+    selector {
+      match_labels = {
+        usage = "ml-app-data"
+      }
+    }
+  }
+}
+
+resource "kubernetes_persistent_volume" "pv_ml_app_data" {
+  depends_on = [kubernetes_storage_class.local_storage]
+
+  metadata {
+    name = "pv-ml-app-data"
+
+    labels = {
+      usage = "ml-app-data"
+    }
+  }
+
+  spec {
+    capacity = {
+      storage = "5Gi"
+    }
+
+    access_modes = ["ReadWriteOnce"]
+
+    storage_class_name = "local-storage"
+
+    persistent_volume_source {
+      host_path {
+        path = "/var/lib/ml_app"
+      }
+    }
+
+    claim_ref {
+      namespace = "default"
+      name      = "pvc-ml-app-data"
+    }
+  }
+}

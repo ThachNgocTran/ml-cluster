@@ -4,3 +4,5 @@ terraform-helm/.terraform.lock.hcl
 
 terraform-helm/terraform.tfstate
 terraform-helm/terraform.tfstate.backup
+
+ml_app/__pycache__/
