@@ -12,6 +12,10 @@ terraform {
       source  = "hashicorp/helm"
       version = "3.1.1"
     }
+	null = {
+      source  = "hashicorp/null"
+      version = "3.2.4"
+    }
   }
 }
 
@@ -54,6 +58,15 @@ ports:
 EOF
 }
 
+# Wait for the cluster to be ready.
+resource "null_resource" "wait_for_kubernetes" {
+  depends_on = [k3d_cluster.my_cluster]
+
+  provisioner "local-exec" {
+    command = "kubectl wait --for=condition=Ready node --all --timeout=120s"
+  }
+}
+
 # 2. Configure Helm to talk to the cluster we just built
 provider "kubernetes" {
   host                   = k3d_cluster.my_cluster.host
@@ -84,5 +97,5 @@ resource "kubernetes_secret" "secret_info" {
   }
 
   # Ensure the cluster is ready before trying to create the secret
-  depends_on = [k3d_cluster.my_cluster]
+  depends_on = [null_resource.wait_for_kubernetes]
 }

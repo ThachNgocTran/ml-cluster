@@ -1,4 +1,6 @@
 resource "kubernetes_ingress_v1" "mlflow_ingress" {
+  depends_on = [null_resource.wait_for_kubernetes]
+
   metadata {
     name = "mlflow-ingress"
 

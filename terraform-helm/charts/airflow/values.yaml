@@ -1,0 +1,29 @@
+replicaCount: 1
+
+image:
+  repository: apache/airflow
+  tag: 2.11.1-python3.12
+
+service:
+  port: 8080
+
+database:
+  host: postgres-svc
+  port: 5432
+  name: airflow
+
+persistence:
+  dagsClaim: pvc-airflow-dags
+  logsClaim: pvc-airflow-logs
+
+secrets:
+  name: secret-info
+  fernetKey: airflow_fernet_key
+  username: username
+  password: password
+
+executor: LocalExecutor
+
+securityContext:
+  runAsUser: 50000
+  fsGroup: 50000

@@ -1,0 +1,191 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow
+  labels:
+    app: airflow
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: airflow
+
+  template:
+    metadata:
+      labels:
+        app: airflow
+
+    spec:
+      securityContext:
+        runAsUser: 50000
+        fsGroup: 0
+      initContainers:
+        - name: airflow-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          env:
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: {{ .Values.secrets.fernetKey }}
+
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: {{ .Values.secrets.username }}
+
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: {{ .Values.secrets.password }}
+
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              value: postgresql+psycopg2://$(DB_USER):$(DB_PASS)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}
+
+          command:
+            - /usr/bin/dumb-init
+            - --
+            - bash
+            - -c
+            - |
+              set -e
+
+              echo "Waiting for Airflow database..."
+
+              until airflow db check; do
+                echo "Database not ready yet..."
+                sleep 5
+              done
+
+              echo "Running Airflow DB migrations..."
+              airflow db upgrade
+
+              echo "Creating admin user if it does not exist..."
+
+              airflow users create \
+                --username ${AIRFLOW_ADMIN_USERNAME:-admin} \
+                --firstname Admin \
+                --lastname User \
+                --role Admin \
+                --email ${AIRFLOW_ADMIN_EMAIL:-admin@example.com} \
+                --password ${AIRFLOW_ADMIN_PASSWORD:-admin} \
+              || true
+
+              echo "Airflow initialization complete."
+
+      containers:
+
+        - name: airflow-webserver
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          ports:
+            - containerPort: {{ .Values.service.port }}
+
+          env:
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: {{ .Values.secrets.fernetKey }}
+
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: {{ .Values.secrets.username }}
+
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: {{ .Values.secrets.password }}
+
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              value: postgresql+psycopg2://$(DB_USER):$(DB_PASS)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}
+
+            - name: AIRFLOW__CORE__EXECUTOR
+              value: {{ .Values.executor }}
+
+          command: ["/usr/bin/dumb-init","--","/entrypoint","webserver"]
+
+          volumeMounts:
+            - name: dags-data
+              mountPath: /opt/airflow/dags
+            - name: logs-data
+              mountPath: /opt/airflow/logs
+
+        - name: airflow-scheduler
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          env:
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: {{ .Values.secrets.fernetKey }}
+
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: {{ .Values.secrets.username }}
+
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: {{ .Values.secrets.password }}
+
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              value: postgresql+psycopg2://$(DB_USER):$(DB_PASS)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}
+
+            - name: AIRFLOW__CORE__EXECUTOR
+              value: {{ .Values.executor }}
+
+          command:
+            - /usr/bin/dumb-init
+            - --
+            - bash
+            - -c
+            - |
+              set -e
+
+              echo "Install Mlflow library"
+
+              pip install mlflow==3.10.1
+
+              echo "Installation of Mlflow library complete."
+
+              echo "Start scheduler"
+
+              exec /entrypoint scheduler
+
+          volumeMounts:
+            - name: dags-data
+              mountPath: /opt/airflow/dags
+            - name: logs-data
+              mountPath: /opt/airflow/logs
+
+      volumes:
+        - name: dags-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.dagsClaim }}
+
+        - name: logs-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.logsClaim }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-web-svc
+spec:
+  selector:
+    app: airflow
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}

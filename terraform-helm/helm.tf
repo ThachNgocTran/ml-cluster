@@ -1,19 +1,32 @@
 locals {
   charts = {
     # Local Chart (Stored in ./charts/frontend)
-    "postgres" = {
-      is_local = true
-      source   = "./charts/postgres" # Path to the folder
-      chart    = "postgres"          # The name of the chart
-    }
     "mlflow" = {
       is_local = true
       source   = "./charts/mlflow"
       chart    = "mlflow"
     }
+	"airflow" = {
+      is_local = true
+      source   = "./charts/airflow"
+      chart    = "airflow"
+    }
   }
 }
 
+# Deploy Postgres first!
+resource "helm_release" "postgres" {
+  name             = "postgres"
+  namespace        = "default"
+  create_namespace = true
+  repository = null
+  chart = "./charts/postgres"
+
+  # Deploy all Persistent Volume first!
+  depends_on = [kubernetes_secret.secret_info, kubernetes_persistent_volume_claim.pvc_postgres]
+}
+
+# Deploy the rest.
 resource "helm_release" "apps" {
   for_each = local.charts
 
@@ -27,7 +40,9 @@ resource "helm_release" "apps" {
   # If it's local, the 'chart' argument must be the PATH to the folder.
   # If remote, it's just the name of the chart in the repo.
   chart = each.value.is_local ? each.value.source : each.value.chart
-
-  depends_on = [k3d_cluster.my_cluster]
+  # For long init.
+  timeout = 900   # 15 minutes
+  
+  # MyNote: This list must be static! Can't be passed from "each".
+  depends_on = [kubernetes_secret.secret_info, kubernetes_persistent_volume_claim.pvc_mlflow, kubernetes_persistent_volume_claim.pvc_airflow_dags, kubernetes_persistent_volume_claim.pvc_airflow_logs, helm_release.postgres]
 }
-
