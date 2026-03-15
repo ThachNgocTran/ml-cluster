@@ -1,0 +1,114 @@
+name: Cluster Ready Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: self-hosted
+    steps:
+      - name: Install dependencies
+        run: |
+          # Fake failure! (for testing)
+          #exit 1
+          for pkg in git curl unzip ca-certificates; do
+              if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
+                  echo "Error: Package '$pkg' is not installed." >&2
+                  exit 1
+              fi
+          done
+          echo "All needed apt packages are present."
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12.7
+      #- name: Install k3d
+      #  run: curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.8.3 bash
+      - name: Install k3d
+        uses: nolar/setup-k3d-k3s@v1
+        with:
+          version: v1.31.5+k3s1
+          k3d-tag: v5.8.3
+          skip-creation: true
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.6
+      #- name: Install Helm
+      #  run: |
+      #    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash -s -- --version v4.1.1
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.0
+        with:
+          version: '4.1.1'
+      #- name: Install kubectl
+      #  run: |
+      #    curl -LO "https://dl.k8s.io/release/v1.35.2/bin/linux/amd64/kubectl"
+      #    chmod +x kubectl
+      #    mv kubectl /usr/local/bin/
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.35.2'
+      - name: Run test
+        run: |
+          echo '*** docker version: ***'
+          docker info
+          echo '*** OS version: ***'
+          echo "$(lsb_release -ds) $(uname -m)"
+          echo '*** Hardware: ***'
+          echo "$(grep MemTotal /proc/meminfo | awk '{print $2/1024 " MB RAM"}'); $(nproc) CPUs"
+          echo '*** Python version: ***'
+          python --version
+          echo '*** Terraform version: ***'
+          terraform version
+          echo '*** Helm version: ***'
+          helm version
+          echo '*** kubectl version: ***'
+          kubectl version --client
+          echo '*** k3d version: ***'
+          k3d --version
+          echo '*** k3d cluster list ***'
+          k3d cluster list
+          echo '************************'
+      - name: Run Terraform
+        env:
+          TF_VAR_airflow_fernet_key: ${{ secrets.TF_VAR_AIRFLOW_FERNET_KEY }}
+          TF_VAR_password: ${{ secrets.TF_VAR_PASSWORD }}
+          TF_VAR_username: ${{ secrets.TF_VAR_USERNAME }}
+          #TF_LOG: DEBUG
+        working-directory: ./terraform-helm
+        run: |
+          echo '*** Test: extracting environment variable: ***'
+          echo TF_VAR_airflow_fernet_key=${TF_VAR_airflow_fernet_key:0:3}...
+          echo TF_VAR_password=${TF_VAR_password:0:3}...
+          echo TF_VAR_username=${TF_VAR_username:0:3}...
+          echo '*** Running Terraform init ***'
+          terraform init
+          echo '*** Running Terraform apply ***'
+          terraform apply -auto-approve
+          echo '*** Done creating the cluster. Now verifying. ***'
+          echo '*** Wait for Nodes: ***'
+          kubectl wait --for=condition=Ready nodes --all --timeout=300s
+          echo '*** Wait for Pods: ***'
+          kubectl wait --for=condition=Ready pods --all -A --field-selector=status.phase=Running --timeout=300s
+          echo '*** Wait for Deployments: ***'
+          kubectl wait --for=condition=available --all deployments -A --timeout=300s
+          echo '*** Destroy the cluster ***'
+          terraform destroy -auto-approve
+          echo '*** Done Main-Task ***'
+      - name: Force delete stubborn folders
+        if: always()
+        run: |
+          # Add this line "<USER_NAME> ALL=(ALL) NOPASSWD: /usr/bin/chmod -R a+rwx /home/<USER_NAME>/projects/actions-runner/*" to "visudo" on Ubuntu.
+          echo '*** Change Permission: ${{ github.workspace }} ***'
+          sudo chmod -R a+rwx  ${{ github.workspace }}
+          echo '*** Done Post-Task ***'
