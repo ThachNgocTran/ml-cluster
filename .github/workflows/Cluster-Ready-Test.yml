@@ -28,13 +28,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.12.7
       #- name: Install k3d
       #  run: curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.8.3 bash
-      - name: Install k3d
+      - name: Setup k3d
         uses: nolar/setup-k3d-k3s@v1
         with:
           version: v1.31.5+k3s1
@@ -47,7 +47,7 @@ jobs:
       #- name: Install Helm
       #  run: |
       #    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash -s -- --version v4.1.1
-      - name: Install Helm
+      - name: Setup Helm
         uses: azure/setup-helm@v4.3.0
         with:
           version: '4.1.1'
@@ -56,11 +56,11 @@ jobs:
       #    curl -LO "https://dl.k8s.io/release/v1.35.2/bin/linux/amd64/kubectl"
       #    chmod +x kubectl
       #    mv kubectl /usr/local/bin/
-      - name: Install kubectl
+      - name: Setup kubectl
         uses: azure/setup-kubectl@v4
         with:
           version: 'v1.35.2'
-      - name: Run test
+      - name: Check tools' versions
         run: |
           echo '*** docker version: ***'
           docker info
@@ -81,7 +81,7 @@ jobs:
           echo '*** k3d cluster list ***'
           k3d cluster list
           echo '************************'
-      - name: Run Terraform
+      - name: Run Terraform (Create, Check and then Destroy Cluster)
         env:
           TF_VAR_airflow_fernet_key: ${{ secrets.TF_VAR_AIRFLOW_FERNET_KEY }}
           TF_VAR_password: ${{ secrets.TF_VAR_PASSWORD }}
@@ -90,9 +90,9 @@ jobs:
         working-directory: ./terraform-helm
         run: |
           echo '*** Test: extracting environment variable: ***'
-          echo TF_VAR_airflow_fernet_key=${TF_VAR_airflow_fernet_key:0:3}...
-          echo TF_VAR_password=${TF_VAR_password:0:3}...
-          echo TF_VAR_username=${TF_VAR_username:0:3}...
+          echo TF_VAR_airflow_fernet_key=${TF_VAR_airflow_fernet_key:0:3}...${TF_VAR_airflow_fernet_key: -3}
+          echo TF_VAR_password=${TF_VAR_password:0:3}...${TF_VAR_password: -3}
+          echo TF_VAR_username=${TF_VAR_username:0:3}...${TF_VAR_username: -3}
           echo '*** Running Terraform init ***'
           terraform init
           echo '*** Running Terraform apply ***'
@@ -107,7 +107,7 @@ jobs:
           echo '*** Destroy the cluster ***'
           terraform destroy -auto-approve
           echo '*** Done Main-Task ***'
-      - name: Change permission in _work within Runner
+      - name: Change permission in _work folder within Runner
         if: always()
         run: |
           # Add this line "<USER_NAME> ALL=(ALL) NOPASSWD: /usr/bin/chmod -R a+rwx /home/<USER_NAME>/projects/actions-runner/*" to "visudo" on Ubuntu.
