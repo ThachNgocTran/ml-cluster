@@ -83,11 +83,19 @@ spec:
 
           ports:
             - containerPort: {{ .Values.service.port }}
-          readinessProbe:
+          startupProbe:
             httpGet:
               path: /health
               port: {{ .Values.service.port }}
             initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 10
