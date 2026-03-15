@@ -6,3 +6,5 @@ terraform-helm/terraform.tfstate
 terraform-helm/terraform.tfstate.backup
 
 ml_app/__pycache__/
+airflow/dags-data/__pycache__/
+
