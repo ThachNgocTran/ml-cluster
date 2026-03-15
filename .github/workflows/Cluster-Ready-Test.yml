@@ -107,7 +107,7 @@ jobs:
           echo '*** Destroy the cluster ***'
           terraform destroy -auto-approve
           echo '*** Done Main-Task ***'
-      - name: Force delete stubborn folders
+      - name: Change permission in _work within Runner
         if: always()
         run: |
           # Add this line "<USER_NAME> ALL=(ALL) NOPASSWD: /usr/bin/chmod -R a+rwx /home/<USER_NAME>/projects/actions-runner/*" to "visudo" on Ubuntu.
