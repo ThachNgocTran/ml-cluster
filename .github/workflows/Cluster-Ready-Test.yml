@@ -104,9 +104,13 @@ jobs:
           kubectl wait --for=condition=Ready pods --all -A --field-selector=status.phase=Running --timeout=300s
           echo '*** Wait for Deployments: ***'
           kubectl wait --for=condition=available --all deployments -A --timeout=300s
-          echo '*** Destroy the cluster ***'
-          terraform destroy -auto-approve
           echo '*** Done Main-Task ***'
+      - name: Destroy the cluster (if any)
+        if: always()
+        working-directory: ./terraform-helm
+        run: |
+          echo '*** Destroy the cluster ***'
+          terraform destroy -auto-approve || true
       - name: Change permission in _work folder within Runner
         if: always()
         run: |

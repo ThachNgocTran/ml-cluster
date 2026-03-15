@@ -46,7 +46,7 @@ resource "helm_release" "apps" {
   # If remote, it's just the name of the chart in the repo.
   chart = each.value.is_local ? each.value.source : each.value.chart
   # For long init.
-  timeout = 900   # 15 minutes
+  timeout = 1800   # 30 minutes
   
   # MyNote: This list must be static! Can't be passed from "each".
   depends_on = [kubernetes_secret.secret_info, kubernetes_persistent_volume_claim.pvc_mlflow, kubernetes_persistent_volume_claim.pvc_airflow_dags, kubernetes_persistent_volume_claim.pvc_airflow_logs, kubernetes_persistent_volume_claim.pvc_ml_app_data, helm_release.postgres]
