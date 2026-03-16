@@ -23,6 +23,8 @@ The cluster integrates **PostgreSQL, MLflow, Apache AirFlow**, and a **Flask** a
 ## Lessons learned
 
 + The `depends_on` meta-argument in Terraform is important in controlling the order of deloying resources in the cluster. Terraform tries to parallelize everything to speed up, which can lead to unintended consequences. It would be more predictable when manually controlling this process. See [here](terraform-helm/graph.svg).
++ In Terraform, in `helm.tf`, without using `timeout = 900`, it defaults to a standard 5-minute (300 seconds) wait, which may be too short. E.g. resource constraint. Terraform trusts the Kubernetes API for checking the Resources' Readiness. But when a Pod is ready, it doesn't mean the Application in the Pod is ready!
+  + **Take-away**: explicitly use `timeout = 900` (or some number); additionally use `startupProbe` and `readinessProbe` in Helm Chart YAML file for e.g. `kind: Deployment`. Example: [here](terraform-helm/charts/airflow/templates/airflow.yaml).
 
 ## Reproducibility
 
