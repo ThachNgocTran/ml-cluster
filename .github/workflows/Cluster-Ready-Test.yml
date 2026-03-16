@@ -12,6 +12,14 @@ jobs:
   terraform:
     runs-on: self-hosted
     steps:
+      - name: Prepare Cluster Data
+        run: |
+          echo '*** Prepare Cluster Data ***'
+          sudo chmod -R a+rwx /var/lib/demo-cluster-data
+          rm -rf /var/lib/demo-cluster-data/airflow/logs-data/*
+          rm -rf /var/lib/demo-cluster-data/mlflow-data/*
+          rm -rf /var/lib/demo-cluster-data/postgres-data/*
+          echo '*** Done Pre-Task ***'
       - name: Install dependencies
         run: |
           # Fake failure! (for testing)
