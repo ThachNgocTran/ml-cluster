@@ -18,7 +18,7 @@ The cluster integrates **PostgreSQL, MLflow, Apache AirFlow**, and a **Flask** a
 
 ## Architecture
 
-TODO
+![Cluster Architecture](assets/diagram.png)
 
 ## Lessons learned
 
