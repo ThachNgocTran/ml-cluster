@@ -22,7 +22,7 @@ The cluster integrates **PostgreSQL, MLflow, Apache AirFlow**, and a **Flask** a
 
 ## Lessons learned
 
-TODO
++ The `depends_on` meta-argument in Terraform is important in controlling the order of deloying resources in the cluster. Terraform tries to parallelize everything to speed up, which can lead to unintended consequences. It would be more predictable when manually controlling this process. See [here](terraform-helm/graph.svg).
 
 ## Reproducibility
 
