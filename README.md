@@ -26,6 +26,7 @@ The cluster integrates **PostgreSQL, MLflow, Apache AirFlow**, and a **Flask** a
 + In Terraform, in `helm.tf`, without using `timeout = 900`, it defaults to a standard 5-minute (300 seconds) wait, which may be too short. E.g. resource constraint. Terraform trusts the Kubernetes API for checking the Resources' Readiness. But when a Pod is ready, it doesn't mean the Application in the Pod is ready!
   + **Take-away**: explicitly use `timeout = 900` (or some number); additionally use `startupProbe` and `readinessProbe` in Helm Chart YAML file for e.g. `kind: Deployment`. Example: [here](terraform-helm/charts/airflow/templates/airflow.yaml).
 + File System Permission: When declaring `PersistentVolumeClaim`, the `securityContext:` (for a `Deployment`) is often as followed `runAsUser: 50000` (in case of AirFlow), `fsGroup: 0`. The latter means: *"I want to be added into this Group"*. What if the host who offers `PersistentVolume` allocates the folder with Root Group being unable to write in that folder? For example `drwxr-xr-x  2 root root`. Worse, for some reason, the host assigns a different Group (not Root Group). All this makes AirFlow unable to write its data, leading to the failure of Pod creation.
+  + **Take-away**: Pre-allocate all folders needed for the Cluster (`PersistentVolume`) in advance, with appropriate Permissions (or just everyone-can-write Permission `sudo chmod -R a+rwx a_folder`).
 
 ## Reproducibility
 
