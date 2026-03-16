@@ -8,6 +8,11 @@ Build Status:
 
 The cluster integrates **PostgreSQL, MLflow, Apache AirFlow**, and a **Flask** application. PostgreSQL serves as the centralized metadata repository for both MLflow and AirFlow. The machine learning lifecycle begins in a Jupyter Notebook, where training scripts log results and artifacts to MLflow. Once a Data Scientist manually registers a model version within the MLflow Registry, an AirFlow DAG periodically polls for updates. Upon detecting a new version, AirFlow triggers the Flask server to transition the updated model into the production environment. The Flask backend functions as both a web server for HTML content and a RESTful API for executing model updates and predictions.
 
+Features:
+
++ **Infrastructure as Code**: Rapidly provision or decommission clusters using **Terraform**.
++ **Parameterized charts**: optimal for flexible, environment-aware deployments, using **Helm Charts**.
+
 ## Demo Video
 
 <p align="center">
