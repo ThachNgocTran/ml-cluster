@@ -50,6 +50,8 @@ Runtime: Ubuntu 24.04
   + `TF_VAR_password`: Password for Postgres.
   + `TF_VAR_username`: Username for Postgres.
 10. Preallocate folder `/var/lib/demo-cluster-data` with Full-Permission for everyone.
+  + Child folder: `./airflow/dags-data` with file `deploy_model_if_newer.py` ([link](airflow/dags-data/deploy_model_if_newer.py)) ➔ DAG file for AirFlow.
+  + Child folder: `ml_app` with file `ml_app.py` and folder `templates` ([link](ml_app))
 11. Download the Github Repo `ml-cluster`.
 12. Move to the folder `terraform-helm` folder within. Type: `terraform init`, then `terraform apply -auto-approve`.
 13. Check health status of the Cluster:
