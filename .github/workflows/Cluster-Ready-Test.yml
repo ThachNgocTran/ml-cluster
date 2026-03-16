@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'terraform-helm/**'
+      - '.github/workflows/Cluster-Ready-Test.yml'
 
 jobs:
   terraform:
@@ -81,7 +82,7 @@ jobs:
           echo '*** k3d cluster list ***'
           k3d cluster list
           echo '************************'
-      - name: Run Terraform (Create, Check and then Destroy Cluster)
+      - name: Run Terraform (Create, Check)
         env:
           TF_VAR_airflow_fernet_key: ${{ secrets.TF_VAR_AIRFLOW_FERNET_KEY }}
           TF_VAR_password: ${{ secrets.TF_VAR_PASSWORD }}
@@ -111,6 +112,9 @@ jobs:
         run: |
           echo '*** Destroy the cluster ***'
           terraform destroy -auto-approve || true
+          if k3d cluster list | grep demo-cluster; then
+            k3d cluster delete demo-cluster
+          fi
       - name: Clean up Cluster Data
         if: always()
         run: |
