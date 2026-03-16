@@ -111,10 +111,13 @@ jobs:
         run: |
           echo '*** Destroy the cluster ***'
           terraform destroy -auto-approve || true
-      - name: Change permission in _work folder within Runner
+      - name: Clean up Cluster Data
         if: always()
         run: |
-          # Add this line "<USER_NAME> ALL=(ALL) NOPASSWD: /usr/bin/chmod -R a+rwx /home/<USER_NAME>/projects/actions-runner/*" to "visudo" on Ubuntu.
-          echo '*** Change Permission: ${{ github.workspace }} ***'
-          sudo chmod -R a+rwx  ${{ github.workspace }}
+          # Add this line "<USER_NAME> ALL=(ALL) NOPASSWD: /usr/bin/chmod -R a+rwx /var/lib/demo-cluster-data/*" to "visudo" on Ubuntu.
+          echo '*** Clean up Cluster Data ***'
+          sudo chmod -R a+rwx /var/lib/demo-cluster-data
+          rm -rf /var/lib/demo-cluster-data/airflow/logs-data/*
+          rm -rf /var/lib/demo-cluster-data/mlflow-data/*
+          rm -rf /var/lib/demo-cluster-data/postgres-data/*
           echo '*** Done Post-Task ***'

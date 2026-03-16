@@ -34,23 +34,23 @@ servers: 1
 agents: 4
 
 volumes:
-  - volume: "${local.base_dir}/postgres-data:/var/lib/postgres-data"
+  - volume: "/var/lib/demo-cluster-data/postgres-data:/var/lib/postgres-data"
     nodeFilters:
       - server:*
       - agent:*
-  - volume: "${local.base_dir}/mlflow-data:/var/lib/mlflow-data"
+  - volume: "/var/lib/demo-cluster-data/mlflow-data:/var/lib/mlflow-data"
     nodeFilters:
       - server:*
       - agent:*
-  - volume: "${local.base_dir}/airflow/dags-data:/var/lib/airflow-dags-data"
+  - volume: "/var/lib/demo-cluster-data/airflow/dags-data:/var/lib/airflow-dags-data"
     nodeFilters:
       - server:*
       - agent:*
-  - volume: "${local.base_dir}/airflow/logs-data:/var/lib/airflow-logs-data"
+  - volume: "/var/lib/demo-cluster-data/airflow/logs-data:/var/lib/airflow-logs-data"
     nodeFilters:
       - server:*
       - agent:*
-  - volume: "${local.base_dir}/ml_app:/var/lib/ml_app"
+  - volume: "/var/lib/demo-cluster-data/ml_app:/var/lib/ml_app"
     nodeFilters:
       - server:*
       - agent:*

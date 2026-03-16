@@ -89,7 +89,7 @@ spec:
               port: {{ .Values.service.port }}
             initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
@@ -123,6 +123,12 @@ spec:
 
             - name: AIRFLOW__CORE__EXECUTOR
               value: {{ .Values.executor }}
+              
+            - name: AIRFLOW__WEBSERVER__WEB_SERVER_HOST
+              value: "0.0.0.0"
+              
+            - name: AIRFLOW__WEBSERVER__WEB_SERVER_PORT
+              value: "{{ .Values.service.port }}"
 
           command: ["/usr/bin/dumb-init","--","/entrypoint","webserver"]
 
