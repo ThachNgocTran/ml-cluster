@@ -69,3 +69,8 @@ Runtime: Ubuntu 24.04
 + Helm: 4.1.1
 + kubectl: v1.35.2
 + Postgres: 15-alpine (Docker Image)
+
+## Future Works
+
++ `k3d` is a local Kubernetes. Think of AWS EKS (https://aws.amazon.com/eks/) or Google GKE (https://cloud.google.com/kubernetes-engine), or Azure AKS (https://azure.microsoft.com/en-us/products/kubernetes-service).
+  + In Terraform, the "main.tf" should change to certain Providers.
