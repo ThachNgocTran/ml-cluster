@@ -25,7 +25,7 @@ Features:
 
 ![Cluster Architecture](assets/diagram.png)
 
-## Lessons learned
+## Best Practices
 
 + The `depends_on` meta-argument in Terraform is important in controlling the order of deloying resources in the cluster. Terraform tries to *parallelize* everything to speed up, which can lead to unintended consequences. It would be more predictable when manually controlling this process. See [here](terraform-helm/graph.svg).
 + In Terraform, in `helm.tf`, without using `timeout = 900`, it defaults to a standard 5-minute (300 seconds) wait, which may be too short. E.g. resource constraint. Terraform trusts the Kubernetes API for checking the Resources' Readiness. But when a Pod is ready, it doesn't mean the Application in the Pod is ready!
